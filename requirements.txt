@@ -1,0 +1,11 @@
+# Azure Functions
+azure-functions
+
+# Azure SDK for Cost Management and Resource Management
+azure-mgmt-costmanagement>=4.0.0
+azure-mgmt-resource>=23.0.0
+azure-mgmt-compute>=30.0.0
+azure-identity>=1.15.0
+
+# Utilities
+python-dateutil>=2.8.2
