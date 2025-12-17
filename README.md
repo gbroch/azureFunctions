@@ -54,10 +54,19 @@ Create a `local.settings.json` file (for local development):
   "Values": {
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "FUNCTIONS_WORKER_RUNTIME": "python",
-    "AZURE_SUBSCRIPTION_ID": "your-subscription-id-here"
+    "AZURE_SUBSCRIPTION_ID": "your-subscription-id-here",
+    "AZURE_RESOURCE_API_VERSION": "2023-07-01",
+    "VM_SHUTDOWN_TIMEOUT": "300"
   }
 }
 ```
+
+#### Optional Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `AZURE_RESOURCE_API_VERSION` | `2023-07-01` | API version for Azure Resource Manager queries |
+| `VM_SHUTDOWN_TIMEOUT` | `300` | Timeout in seconds for VM shutdown operations |
 
 ### 4. Grant Required Permissions
 

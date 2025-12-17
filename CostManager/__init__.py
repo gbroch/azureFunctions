@@ -252,9 +252,10 @@ def get_resource_details(
             
             # Try to get full resource details
             try:
+                # Use latest stable API version
                 resource = resource_client.resources.get_by_id(
                     resource_id,
-                    api_version="2021-04-01"
+                    api_version=os.environ.get('AZURE_RESOURCE_API_VERSION', '2023-07-01')
                 )
                 return {
                     "name": resource.name,
@@ -262,7 +263,7 @@ def get_resource_details(
                     "location": resource.location,
                     "resource_group": resource_group
                 }
-            except:
+            except Exception:
                 # Return basic parsed info if API call fails
                 return {
                     "name": resource_name,
@@ -270,7 +271,7 @@ def get_resource_details(
                     "location": "Unknown",
                     "resource_group": resource_group
                 }
-    except:
+    except Exception:
         pass
     
     return {
@@ -331,8 +332,9 @@ def shutdown_resources(
                         resource_group,
                         resource_name
                     )
-                    # Wait for operation to complete (with timeout)
-                    async_vm_deallocate.wait(timeout=300)
+                    # Wait for operation to complete (with configurable timeout)
+                    timeout = int(os.environ.get('VM_SHUTDOWN_TIMEOUT', '300'))
+                    async_vm_deallocate.wait(timeout=timeout)
                     
                     result["status"] = "success"
                     result["message"] = f"VM '{resource_name}' deallocated successfully"
