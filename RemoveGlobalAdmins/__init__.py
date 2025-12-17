@@ -57,11 +57,37 @@ async def main(req: func.HttpRequest) -> func.HttpResponse:
         scopes = ['https://graph.microsoft.com/.default']
         client = GraphServiceClient(credentials=credential, scopes=scopes)
         
-        logging.info(f"Fetching members of Global Administrator role (ID: {GLOBAL_ADMIN_ROLE_ID})")
+        logging.info(f"Fetching Global Administrator role (template ID: {GLOBAL_ADMIN_ROLE_ID})")
+        
+        # Get all directory roles and find the activated Global Administrator role
+        all_roles = await client.directory_roles.get()
+        global_admin_role = None
+        
+        if all_roles and all_roles.value:
+            for role in all_roles.value:
+                # Check if this is the Global Administrator role using role_template_id
+                role_template_id = getattr(role, 'role_template_id', None)
+                if role_template_id == GLOBAL_ADMIN_ROLE_ID:
+                    global_admin_role = role
+                    logging.info(f"Found activated Global Administrator role (ID: {role.id})")
+                    break
+        
+        if not global_admin_role:
+            logging.warning("Global Administrator role not found or not activated")
+            return func.HttpResponse(
+                json.dumps({
+                    "status": "completed",
+                    "removedUsers": [],
+                    "totalRemoved": 0,
+                    "errors": ["Global Administrator role not found or not activated"]
+                }),
+                status_code=200,
+                mimetype="application/json"
+            )
         
         # Get all members of the Global Administrator role
         role_assignments = await client.directory_roles.by_directory_role_id(
-            GLOBAL_ADMIN_ROLE_ID
+            global_admin_role.id
         ).members.get()
         
         removed_users = []
@@ -73,27 +99,39 @@ async def main(req: func.HttpRequest) -> func.HttpResponse:
             # Remove each user from the role
             for member in role_assignments.value:
                 try:
+                    # Check if this is a user object using additional_data
+                    odata_type = None
+                    if hasattr(member, 'additional_data') and member.additional_data:
+                        odata_type = member.additional_data.get('@odata.type')
+                    elif hasattr(member, 'odata_type'):
+                        odata_type = member.odata_type
+                    
                     # Only process user objects (not service principals or groups)
-                    if hasattr(member, 'odata_type') and member.odata_type == USER_ODATA_TYPE:
+                    if odata_type == USER_ODATA_TYPE:
                         user_id = member.id
-                        user_principal_name = getattr(member, 'user_principal_name', 'Unknown')
                         
-                        logging.info(f"Removing user {user_principal_name} (ID: {user_id}) from Global Administrator role")
+                        # Get display name from member object, or fetch user details if needed
+                        user_display_name = getattr(member, 'display_name', None)
+                        if not user_display_name:
+                            user_display_name = f"User-{user_id}"
                         
-                        # Remove the user from the role
+                        logging.info(f"Removing user {user_display_name} (ID: {user_id}) from Global Administrator role")
+                        
+                        # Remove the user from the role using the actual role ID
                         await client.directory_roles.by_directory_role_id(
-                            GLOBAL_ADMIN_ROLE_ID
+                            global_admin_role.id
                         ).members.by_directory_object_id(
                             user_id
                         ).ref.delete()
                         
                         removed_users.append({
                             "id": user_id,
-                            "userPrincipalName": user_principal_name
+                            "displayName": user_display_name
                         })
-                        logging.info(f"Successfully removed user {user_principal_name}")
+                        logging.info(f"Successfully removed user {user_display_name}")
                     else:
-                        logging.info(f"Skipping non-user object: {member.id}")
+                        odata_info = odata_type if odata_type else "unknown type"
+                        logging.info(f"Skipping non-user object: {member.id} (type: {odata_info})")
                         
                 except Exception as e:
                     error_detail = f"Failed to remove member {member.id}: {str(e)}"
