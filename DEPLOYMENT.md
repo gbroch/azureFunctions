@@ -195,7 +195,7 @@ Invoke-RestMethod -Method Post -Uri "https://removeadmins-prod.azurewebsites.net
   "removedUsers": [
     {
       "id": "user-guid",
-      "userPrincipalName": "user@example.com"
+      "displayName": "User Name"
     }
   ],
   "totalRemoved": 1,

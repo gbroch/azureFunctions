@@ -107,11 +107,11 @@ Success response:
   "removedUsers": [
     {
       "id": "user-id-1",
-      "userPrincipalName": "user1@example.com"
+      "displayName": "User One"
     },
     {
       "id": "user-id-2",
-      "userPrincipalName": "user2@example.com"
+      "displayName": "User Two"
     }
   ],
   "totalRemoved": 2,
