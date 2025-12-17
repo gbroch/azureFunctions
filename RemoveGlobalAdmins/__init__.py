@@ -6,6 +6,11 @@ from azure.identity import ClientSecretCredential
 from msgraph import GraphServiceClient
 
 
+# Constants
+GLOBAL_ADMIN_ROLE_ID = "62e90394-69f5-4237-9190-012177145e10"
+USER_ODATA_TYPE = "#microsoft.graph.user"
+
+
 async def main(req: func.HttpRequest) -> func.HttpResponse:
     """
     Azure Function to remove all users from the Global Administrator role.
@@ -52,14 +57,11 @@ async def main(req: func.HttpRequest) -> func.HttpResponse:
         scopes = ['https://graph.microsoft.com/.default']
         client = GraphServiceClient(credentials=credential, scopes=scopes)
         
-        # Global Administrator role template ID (constant across all Azure AD tenants)
-        global_admin_role_id = "62e90394-69f5-4237-9190-012177145e10"
-        
-        logging.info(f"Fetching members of Global Administrator role (ID: {global_admin_role_id})")
+        logging.info(f"Fetching members of Global Administrator role (ID: {GLOBAL_ADMIN_ROLE_ID})")
         
         # Get all members of the Global Administrator role
         role_assignments = await client.directory_roles.by_directory_role_id(
-            global_admin_role_id
+            GLOBAL_ADMIN_ROLE_ID
         ).members.get()
         
         removed_users = []
@@ -72,7 +74,7 @@ async def main(req: func.HttpRequest) -> func.HttpResponse:
             for member in role_assignments.value:
                 try:
                     # Only process user objects (not service principals or groups)
-                    if hasattr(member, 'odata_type') and member.odata_type == '#microsoft.graph.user':
+                    if hasattr(member, 'odata_type') and member.odata_type == USER_ODATA_TYPE:
                         user_id = member.id
                         user_principal_name = getattr(member, 'user_principal_name', 'Unknown')
                         
@@ -80,7 +82,7 @@ async def main(req: func.HttpRequest) -> func.HttpResponse:
                         
                         # Remove the user from the role
                         await client.directory_roles.by_directory_role_id(
-                            global_admin_role_id
+                            GLOBAL_ADMIN_ROLE_ID
                         ).members.by_directory_object_id(
                             user_id
                         ).ref.delete()
