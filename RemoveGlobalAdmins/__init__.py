@@ -110,8 +110,9 @@ async def main(req: func.HttpRequest) -> func.HttpResponse:
                     if odata_type == USER_ODATA_TYPE:
                         user_id = member.id
                         
-                        # Get display name from member object, or fetch user details if needed
-                        user_display_name = getattr(member, 'display_name', None)
+                        # Get display name from member object (try both snake_case and camelCase)
+                        user_display_name = getattr(member, 'display_name', None) or \
+                                           getattr(member, 'displayName', None)
                         if not user_display_name:
                             user_display_name = f"User-{user_id}"
                         
