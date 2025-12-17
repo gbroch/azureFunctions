@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_FUNCTIONAPP_NAME: 'your-function-app-name'  # Update this
+  AZURE_FUNCTIONAPP_NAME: 'azureFunctionsTesting'  # Update this
   AZURE_FUNCTIONAPP_PACKAGE_PATH: '.'
   PYTHON_VERSION: '3.11'
 
