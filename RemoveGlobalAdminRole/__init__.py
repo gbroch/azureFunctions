@@ -116,7 +116,7 @@ async def main(req: func.HttpRequest) -> func.HttpResponse:
         )
 
 
-async def get_access_token(tenant_id: str, client_id: str, client_secret: str) -> str:
+async def get_access_token(tenant_id: str, client_id: str, client_secret: str) -> str | None:
     """
     Acquire access token for Microsoft Graph API using client credentials flow.
     
@@ -155,7 +155,7 @@ async def get_access_token(tenant_id: str, client_id: str, client_secret: str) -
         return None
 
 
-async def get_role_definition(access_token: str, role_template_id: str) -> dict:
+async def get_role_definition(access_token: str, role_template_id: str) -> dict | None:
     """
     Get the role definition for Global Administrator role.
     
