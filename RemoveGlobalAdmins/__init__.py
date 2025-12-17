@@ -119,11 +119,12 @@ async def main(req: func.HttpRequest) -> func.HttpResponse:
                         logging.info(f"Removing user {user_display_name} (ID: {user_id}) from Global Administrator role")
                         
                         # Remove the user from the role using the actual role ID
-                        await client.directory_roles.by_directory_role_id(
-                            global_admin_role.id
-                        ).members.by_directory_object_id(
-                            user_id
-                        ).ref.delete()
+                        
+                        #await client.directory_roles.by_directory_role_id(
+                            #global_admin_role.id
+                        #).members.by_directory_object_id(
+                            #user_id
+                        #).ref.delete()
                         
                         removed_users.append({
                             "id": user_id,
