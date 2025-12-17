@@ -3,6 +3,36 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Azure Functions
+bin/
+obj/
+.python_packages/
+__blobstorage__/
+__queuestorage__/
+__azurite_db*__.json
+
+# Local settings (contains secrets)
+local.settings.json
+
+# Python virtual environment
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
 # C extensions
 *.so
 
