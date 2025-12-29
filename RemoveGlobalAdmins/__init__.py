@@ -107,7 +107,7 @@ async def main(req: func.HttpRequest) -> func.HttpResponse:
                         odata_type = member.odata_type
                     
                     # Only process user objects (not service principals or groups)
-                    if odata_type == USER_ODATA_TYPE:
+                    if odata_type == USER_ODATA_TYPE #and member.id != '39e3b442-477c-4d10-baad-b2bd59eb18a1' and member.id != '98a84bae-46b6-43f0-8f7f-4b544e95ad12':  # Exclude user IDs of required accounts
                         user_id = member.id
                         
                         # Get display name from member object (try both snake_case and camelCase)

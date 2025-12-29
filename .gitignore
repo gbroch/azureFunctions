@@ -21,7 +21,7 @@ ENV/
 .venv
 
 # IDE
-.vscode/
+
 .idea/
 *.swp
 *.swo
@@ -74,7 +74,7 @@ env.bak/
 venv.bak/
 
 # IDEs
-.vscode/
+
 .idea/
 *.swp
 *.swo
