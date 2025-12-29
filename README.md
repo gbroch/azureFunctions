@@ -4,11 +4,12 @@ This repository contains Azure Functions written in Python to help manage Azure 
 
 ## Overview
 
-This project includes three Azure Functions:
+This project includes four Azure Functions:
 
 1. **CostManager** - Identifies high-cost Azure resources and can shut them down to reduce expenses
 2. **CreateBudgetPolicy** - Creates an Azure Policy to deny new resource creation when budget limits are reached
-3. **RemoveGlobalAdmins** - Removes all users from the Global Administrator role in Azure AD
+3. **AssignBudgetPolicy** - Assigns the budget policy to a subscription or resource group to enforce it
+4. **RemoveGlobalAdmins** - Removes all users from the Global Administrator role in Azure AD
 
 ## Prerequisites
 
@@ -303,8 +304,117 @@ The created policy has the following characteristics:
 
 ### Important Notes
 
-- The policy definition is created but NOT assigned by default
-- After creation, you must assign the policy to a scope (subscription/resource group) for it to take effect
+- Use the **AssignBudgetPolicy** function to assign the policy after creation
+- Consider using Azure Budgets with Action Groups to trigger these functions automatically when budget thresholds are reached
+
+---
+
+## Function: AssignBudgetPolicy
+
+An HTTP-triggered Azure Function that assigns the Deny-New-Resources-OverBudget policy to a subscription or resource group.
+
+### Features
+
+- **Policy Assignment**: Assigns the custom policy created by CreateBudgetPolicy
+- **Flexible Scope**: Can assign to subscription or resource group level
+- **Validation**: Verifies the policy definition exists before creating assignment
+- **Unique Names**: Generates unique assignment names with UUIDs
+
+### Required Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `AZURE_SUBSCRIPTION_ID` | Yes | Target subscription ID |
+| `AZURE_TENANT_ID` | Yes | Azure AD tenant ID |
+| `AZURE_CLIENT_ID` | Yes | Application (client) ID |
+| `AZURE_CLIENT_SECRET` | Yes | Client secret value |
+
+### Usage
+
+#### Assign to Subscription (Default)
+
+```bash
+# Local development
+curl -X POST http://localhost:7071/api/AssignBudgetPolicy
+
+# Azure deployment
+curl -X POST "https://<function-app-name>.azurewebsites.net/api/AssignBudgetPolicy?code=<function-key>"
+```
+
+#### Assign to Specific Resource Group
+
+```bash
+curl -X POST http://localhost:7071/api/AssignBudgetPolicy \
+  -H "Content-Type: application/json" \
+  -d '{
+    "scope": "/subscriptions/<subscription-id>/resourceGroups/<resource-group-name>"
+  }'
+```
+
+#### Assign Different Policy
+
+```bash
+curl -X POST http://localhost:7071/api/AssignBudgetPolicy \
+  -H "Content-Type: application/json" \
+  -d '{
+    "policy_name": "Deny-New-Resources-OverBudget",
+    "scope": "/subscriptions/<subscription-id>"
+  }'
+```
+
+### Request Body Parameters
+
+| Parameter | Required | Default | Description |
+|-----------|----------|---------|-------------|
+| `policy_name` | No | Deny-New-Resources-OverBudget | Name of the policy definition to assign |
+| `scope` | No | /subscriptions/{AZURE_SUBSCRIPTION_ID} | The scope where policy should be assigned |
+
+### Response Format
+
+Success response:
+
+```json
+{
+  "status": "success",
+  "assignmentName": "assign-Deny-New-Resources-OverBudget-a1b2c3d4",
+  "assignmentId": "/subscriptions/.../providers/Microsoft.Authorization/policyAssignments/assign-Deny-New-Resources-OverBudget-a1b2c3d4",
+  "displayName": "Assignment: Deny-New-Resources-OverBudget",
+  "scope": "/subscriptions/12345678-1234-1234-1234-123456789abc",
+  "policyDefinitionId": "/subscriptions/.../providers/Microsoft.Authorization/policyDefinitions/Deny-New-Resources-OverBudget",
+  "enforcementMode": "Default",
+  "description": "Policy assignment to deny new resource creation when budget is exceeded"
+}
+```
+
+Error response (policy not found):
+
+```json
+{
+  "error": "Policy definition 'Deny-New-Resources-OverBudget' not found. Please run CreateBudgetPolicy first."
+}
+```
+
+### Workflow Example
+
+1. Create the policy definition:
+   ```bash
+   curl -X POST http://localhost:7071/api/CreateBudgetPolicy
+   ```
+
+2. Assign the policy to enforce it:
+   ```bash
+   curl -X POST http://localhost:7071/api/AssignBudgetPolicy
+   ```
+
+3. The policy is now active and will deny new resource creation (except resource groups)
+
+### Important Notes
+
+- The policy definition MUST exist before creating an assignment
+- Run **CreateBudgetPolicy** first if the policy doesn't exist
+- Each assignment gets a unique name with a UUID suffix
+- Enforcement mode is set to "Default" (actively enforced)
+- You can create multiple assignments at different scopes
 - Consider using Azure Budgets with Action Groups to trigger this function automatically when budget thresholds are reached
 
 ---
