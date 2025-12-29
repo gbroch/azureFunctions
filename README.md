@@ -23,13 +23,20 @@ This Azure Function provides a secure, HTTP-triggered endpoint to remove all use
 4. Provide a name (e.g., "RemoveGlobalAdminsFunction")
 5. Click **Register**
 
-### 2. Configure API Permissions
+### 2. Configure API Permissions & IAM Roles
 
 Add the following Microsoft Graph **Application permissions** (not delegated):
 - `RoleManagement.ReadWrite.Directory` - Required to remove users from roles
 - `Directory.Read.All` - Required to read directory role members
 
 After adding permissions, click **Grant admin consent** for your tenant.
+
+Open the subscription you would like to provide access to
+Navigate to **Access control (IAM)** > **Role Assignments**
+Add the following role assignments to the app registration you created in Step 1
+- `Billing Reader` - Required to see the resource utilization cost
+- `Resource Policy Contributer` - Required to create the policy to deny new resource creation
+
 
 ### 3. Create a Client Secret
 
